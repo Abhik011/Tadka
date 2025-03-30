@@ -39,23 +39,22 @@ def recommend(ingredients: str):
     # General chat detection
     if user_input in general_responses:
         return {"message": general_responses[user_input]}
-    
-    # Check if user_input is a dish name in the dataset
+
+    # Check if the user input matches a dish name
     matching_recipe = df[df["name"].str.lower() == user_input]
     if not matching_recipe.empty:
         recipe_info = matching_recipe.iloc[0][["name", "ingredients", "recipe"]].to_dict()
+        print("Matched Recipe:", recipe_info)  # Debugging print statement
         return {"recipe": recipe_info}
-    
-    # Otherwise, perform ingredient-based recommendation
+
+    # If no exact match, check ingredient similarity
     input_vector = vectorizer.transform([user_input])
     similarity = cosine_similarity(input_vector, ingredient_matrix)
     top_indices = similarity.argsort()[0][-5:][::-1]
 
     result = df.iloc[top_indices][["name", "ingredients", "diet", "course", "state", "recipe"]].to_dict(orient="records")
 
-    # If no recipes are found, return a friendly message
-    if len(result) == 0:
-        return {"message": "I couldn't find any recipes with those ingredients. Try another dish name!"}
+    print("Recommended Recipes:", result)  # Debugging print statement
 
     return {"recommendations": result}
 
