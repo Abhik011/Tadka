@@ -1,47 +1,52 @@
-from fastapi import FastAPI
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+    from fastapi import FastAPI
+    import pandas as pd
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
 
-app = FastAPI()
+    app = FastAPI()
 
-# Load dataset
-df = pd.read_csv("indian_food.csv")  # Ensure this CSV has a 'recipe' column
+    # Load dataset (Ensure your CSV file has a 'recipe' column)
+    df = pd.read_csv("indian_food.csv")  
 
-# Convert ingredients to lowercase
-df["ingredients"] = df["ingredients"].apply(lambda x: x.lower())
+    # Convert ingredients to lowercase text
+    df["ingredients"] = df["ingredients"].astype(str).str.lower()
 
-# Vectorization
-vectorizer = TfidfVectorizer()
-ingredient_matrix = vectorizer.fit_transform(df["ingredients"])
+    # Ensure 'recipe' column exists and fill NaN values with a placeholder
+    if "recipe" not in df.columns:
+        df["recipe"] = "Recipe not available."
+    else:
+        df["recipe"] = df["recipe"].fillna("Recipe not available.")
 
-# List of general chat inputs
-general_responses = {
-    "hi": "Hello! How can I help you today?",
-    "hello": "Hey there! Looking for a delicious recipe?",
-    "how are you": "I'm just a food AI, but I'm always ready to help!",
-    "what's up": "Not much! Just cooking up some great food ideas for you!"
-}
+    # Vectorization
+    vectorizer = TfidfVectorizer()
+    ingredient_matrix = vectorizer.fit_transform(df["ingredients"])
 
-# Recommendation function
-@app.get("/recommend/")
-def recommend(ingredients: str):
-    ingredients = ingredients.lower().strip()
-    
-    # Check if input is a general chat
-    if ingredients in general_responses:
-        return {"message": general_responses[ingredients]}
-    
-    # Otherwise, treat it as an ingredient list
-    input_vector = vectorizer.transform([ingredients])
-    similarity = cosine_similarity(input_vector, ingredient_matrix)
-    top_indices = similarity.argsort()[0][-5:][::-1]
+    # General chat responses
+    general_responses = {
+        "hello": "Hey there! What dish are you craving today?",
+        "hi": "Hello! Want some delicious food suggestions?",
+        "how are you": "I'm just a bot, but I'm ready to suggest some tasty recipes!",
+        "what's up": "Not much, just thinking about food. How about you?",
+        "who are you": "I'm your personal food assistant! Ask me for recipes or ingredient-based dish suggestions."
+    }
 
-    result = df.iloc[top_indices][["name", "ingredients", "diet", "course", "state", "recipe"]].to_dict(orient="records")
-    
-    return {"recommendations": result}
+    @app.get("/recommend/")
+    def recommend(ingredients: str):
+        user_input = ingredients.lower().strip()
+        
+        # General chat detection
+        if user_input in general_responses:
+            return {"message": general_responses[user_input]}
+        
+        # Recipe suggestion
+        input_vector = vectorizer.transform([user_input])
+        similarity = cosine_similarity(input_vector, ingredient_matrix)
+        top_indices = similarity.argsort()[0][-5:][::-1]
+        
+        result = df.iloc[top_indices][["name", "ingredients", "diet", "course", "state", "recipe"]].to_dict(orient="records")
+        return {"recommendations": result}
 
-# Run the API
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Run the API
+    if __name__ == "__main__":
+        import uvicorn
+        uvicorn.run(app, host="0.0.0.0", port=8000)
