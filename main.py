@@ -5,7 +5,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 app = FastAPI()
 
-# Load dataset (Ensure your CSV file has a 'recipe' column)
+# Load dataset
 df = pd.read_csv("indian_food.csv")
 
 # Convert ingredients to lowercase text
@@ -25,8 +25,8 @@ ingredient_matrix = vectorizer.fit_transform(df["ingredients"])
 general_responses = {
     "hello": "Hey there! What dish are you craving today?",
     "hi": "Hello! Want some delicious food suggestions?",
-    "hii": "Hello! Want some delicious food suggestions?",  # Added "hii"
-    "hey": "Hey! How can I assist you today?",  # Added "hey"
+    "hii": "Hello! Want some delicious food suggestions?",
+    "hey": "Hey! How can I assist you today?",
     "how are you": "I'm just a bot, but I'm ready to suggest some tasty recipes!",
     "what's up": "Not much, just thinking about food. How about you?",
     "who are you": "I'm your personal food assistant! Ask me for recipes or ingredient-based dish suggestions."
@@ -38,13 +38,13 @@ def recommend(ingredients: str):
 
     # Handle general chat responses
     if user_input in general_responses:
-        return {"response": general_responses[user_input]}
+        return {"message": general_responses[user_input]}
 
     # Check if the user input matches a dish name
     matching_recipe = df[df["name"].str.lower() == user_input]
     if not matching_recipe.empty:
-        recipe_info = matching_recipe.iloc[0][["name", "ingredients", "recipe"]].to_dict()
-        return {"recipe": recipe_info}  # Single object, not a list
+        recipe_info = matching_recipe.iloc[0][["name", "ingredients", "diet", "course", "state", "recipe"]].to_dict()
+        return {"recommendations": [recipe_info]}  # Wrap in an array to match Android format
 
     # If no exact match, return only the top recommendation
     input_vector = vectorizer.transform([user_input])
@@ -52,9 +52,8 @@ def recommend(ingredients: str):
     top_index = similarity.argsort()[0][-1]  # Get only the best match
 
     result = df.iloc[top_index][["name", "ingredients", "diet", "course", "state", "recipe"]].to_dict()
-    print("Recommended Recipes:", result)  # Debugging print statement
-    return {"recipe": result}  # Single object
-
+    
+    return {"recommendations": [result]}  # Wrap in an array
 
 # Run the API
 if __name__ == "__main__":
