@@ -25,6 +25,8 @@ ingredient_matrix = vectorizer.fit_transform(df["ingredients"])
 general_responses = {
     "hello": "Hey there! What dish are you craving today?",
     "hi": "Hello! Want some delicious food suggestions?",
+    "hii": "Hello! Want some delicious food suggestions?",  # Added "hii"
+    "hey": "Hey! How can I assist you today?",  # Added "hey"
     "how are you": "I'm just a bot, but I'm ready to suggest some tasty recipes!",
     "what's up": "Not much, just thinking about food. How about you?",
     "who are you": "I'm your personal food assistant! Ask me for recipes or ingredient-based dish suggestions."
