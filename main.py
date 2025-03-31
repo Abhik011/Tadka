@@ -6,7 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 app = FastAPI()
 
 # Load dataset
-df = pd.read_csv("indian_food.csv")
+df = pd.read_csv("indian_food_with_recipes.csv")
 
 # Convert ingredients to lowercase text
 df["ingredients"] = df["ingredients"].astype(str).str.lower()
