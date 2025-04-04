@@ -62,6 +62,11 @@ def recommend(ingredients: str):
 
     result = df.iloc[top_index][["name", "ingredients", "diet", "course", "state", "recipe"]].to_dict()
     return {"recommendations": [result]}  # Wrap in an array
+@app.get("/suggested")
+def get_suggested_recipes():
+    # Return first 5 recipes as suggestions
+    suggestions = df.head(5)[["name", "ingredients", "diet", "course", "state", "recipe"]].to_dict(orient="records")
+    return suggestions
 
 
 # Run the API
